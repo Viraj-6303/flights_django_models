@@ -1,4 +1,6 @@
+from django.http import HttpResponseRedirect
 from django.shortcuts import render
+from django.urls import reverse
 
 from .models import *
 # Create your views here.
@@ -14,8 +16,14 @@ def flight(request, flight_id):
     return render(request, "flights/flight.html", {
         "flight" : flight,
         "passengers" : flight.passengers.all(), 
+        # add this for the sake of booking
+        "non_passengers" : Passenger.objects.exclude(flights=flight).all(),
     })
 
-# def book(request, flight_id):
-#      if request.method == "POST":
-#          flight = Flight.objects.get(pk=flight_id)
+def book(request, flight_id):
+     # to book a flight, we need the flight details and passenger details and map both
+     if request.method == "POST":
+        flight = Flight.objects.get(pk=flight_id)
+        passenger = Passenger.objects.get(pk=int(request.POST['passenger_id']))
+        passenger.flights.add(flight)
+        return HttpResponseRedirect(reverse("flight", args=(flight.id,)))
